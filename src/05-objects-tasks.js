@@ -117,33 +117,121 @@ function fromJSON(proto, json) {
  *  For more examples see unit tests.
  */
 
+class CssSelectors {
+  constructor() {
+    this.selector = '';
+    this.timesInSelector = {
+      element: 0,
+      id: 0,
+      pseudoElement: 0,
+    };
+    this.currentOrder = 0;
+  }
+
+  checkOneTimeOccurrence(selector) {
+    if (this.timesInSelector[selector] > 0) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+  }
+
+  checkOrder(selectorOrder) {
+    if (this.currentOrder > selectorOrder) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    } else {
+      this.currentOrder = selectorOrder;
+    }
+  }
+
+
+  element(value) {
+    this.checkOneTimeOccurrence('element');
+    this.timesInSelector.element += 1;
+
+    this.checkOrder(1);
+
+    this.selector += value;
+    return this;
+  }
+
+  id(value) {
+    this.checkOneTimeOccurrence('id');
+    this.timesInSelector.id += 1;
+
+    this.checkOrder(2);
+
+    this.selector += `#${value}`;
+    return this;
+  }
+
+  class(value) {
+    this.checkOrder(3);
+
+    this.selector += `.${value}`;
+    return this;
+  }
+
+  attr(value) {
+    this.checkOrder(4);
+
+    this.selector += `[${value}]`;
+    return this;
+  }
+
+  pseudoClass(value) {
+    this.checkOrder(5);
+
+    this.selector += `:${value}`;
+    return this;
+  }
+
+  pseudoElement(value) {
+    this.checkOrder(6);
+
+    this.checkOneTimeOccurrence('pseudoElement');
+    this.timesInSelector.pseudoElement += 1;
+
+
+    this.selector += `::${value}`;
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.selector = `${selector1.selector} ${combinator} ${selector2.selector}`;
+    return this;
+  }
+
+  stringify() {
+    return this.selector;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new CssSelectors().element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new CssSelectors().id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new CssSelectors().class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new CssSelectors().attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new CssSelectors().pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new CssSelectors().pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return new CssSelectors().combine(selector1, combinator, selector2);
   },
 };
 
